@@ -27,16 +27,6 @@ func main() {
 		panic(err)
 	}
 
-	// pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// fmt.Printf("Found %d pods:\n", len(pods.Items))
-	// for _, pod := range pods.Items {
-	// 	fmt.Printf("- %s (namespace: %s)\n", pod.Name, pod.Namespace)
-	// }
-
 	fmt.Println("\n Now watching for pod changes...")
 	SendInitialEvents := false
 	watcher, err := clientset.CoreV1().Pods("").Watch(context.TODO(), metav1.ListOptions{SendInitialEvents: &SendInitialEvents, 
