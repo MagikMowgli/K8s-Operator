@@ -1,0 +1,7 @@
+apiVersion: mahdi.dev/v1
+kind: Database
+metadata:
+  name: my-test-db
+spec:
+  type: bigquery
+  dataset: test_dataset
