@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
@@ -22,14 +23,20 @@ func main() {
 		panic(err)
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("\n Now watching for pod changes...")
+	databaseGVR := schema.GroupVersionResource{
+		Group:    "mahdi.dev",
+		Version:  "v1",
+		Resource: "databases",
+	}
+
+	fmt.Println("\n Now watching for Database changes...")
 	SendInitialEvents := false
-	watcher, err := clientset.CoreV1().Pods("").Watch(context.TODO(), metav1.ListOptions{SendInitialEvents: &SendInitialEvents, 
+	watcher, err := dynClient.Resource(databaseGVR).Namespace("").Watch(context.Background(), metav1.ListOptions{SendInitialEvents: &SendInitialEvents, 
 		ResourceVersionMatch: metav1.ResourceVersionMatchNotOlderThan})
 	if err != nil {
 		panic(err)
@@ -38,14 +45,18 @@ func main() {
 	defer watcher.Stop()
 
 	for event := range watcher.ResultChan() {
-		pod := event.Object.(*v1.Pod)
+		db := event.Object.(*unstructured.Unstructured)
+
+		name:= db.GetName()
+		namespace:= db.GetNamespace()
+
 		switch event.Type {
 		case watch.Added:
-			fmt.Printf("✅ NEW POD CREATED: %s in namespace %s\n", pod.Name, pod.Namespace)
+			fmt.Printf("✅ NEW DATABASE CREATED: %s in namespace %s\n", name, namespace)
     	case watch.Deleted:
-        	fmt.Printf("❌ POD DELETED: %s in namespace %s\n", pod.Name, pod.Namespace)
+        	fmt.Printf("❌ DATABASE DELETED: %s in namespace %s\n", name, namespace)
     	case watch.Modified:
-        	fmt.Printf("🔄 POD MODIFIED: %s (status: %s)\n", pod.Name, pod.Status.Phase)
+        	fmt.Printf("🔄 DATABASE MODIFIED: %s in namespace %s)\n", name, namespace)
     	}
 	}	
 }
