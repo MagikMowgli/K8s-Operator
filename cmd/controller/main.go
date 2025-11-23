@@ -49,10 +49,15 @@ func main() {
 
 		name:= db.GetName()
 		namespace:= db.GetNamespace()
+		dbType, _, _ := unstructured.NestedString(db.Object, "spec", "type")
+		dbDataset, _, _ := unstructured.NestedString(db.Object, "spec", "dataset")
+
 
 		switch event.Type {
 		case watch.Added:
 			fmt.Printf("✅ NEW DATABASE CREATED: %s in namespace %s\n", name, namespace)
+			fmt.Printf("    - Type: %s\n", dbType)
+			fmt.Printf("    - Dataset: %s\n", dbDataset)
     	case watch.Deleted:
         	fmt.Printf("❌ DATABASE DELETED: %s in namespace %s\n", name, namespace)
     	case watch.Modified:
