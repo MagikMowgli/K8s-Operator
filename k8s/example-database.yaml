@@ -1,7 +1,8 @@
 apiVersion: mahdi.dev/v1
-kind: Database
+kind: BigQueryTable
 metadata:
-  name: my-test-db
+  name: users-table
 spec:
   type: bigquery
   dataset: test_dataset
+  tableName: users
