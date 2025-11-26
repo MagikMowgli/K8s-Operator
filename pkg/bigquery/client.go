@@ -2,6 +2,7 @@ package bigquery
 
 import (
 	"context"
+
 	"cloud.google.com/go/bigquery"
 )
 
@@ -44,6 +45,22 @@ func CreateTable(projectID, datasetID, tableID string) error {
 }
 
 func DeleteTable(projectID, datasetID, tableID string) error {
+	ctx := context.Background()
 
+	client, err := bigquery.NewClient(ctx, projectID)
+	if err != nil {
+		return err
+	}
 
+	defer client.Close()
+
+	dataset := client.Dataset(datasetID)
+	table := dataset.Table(tableID)
+
+	err = table.Delete(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

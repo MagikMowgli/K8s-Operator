@@ -93,6 +93,14 @@ func main() {
 			}
     	case watch.Deleted:
         	fmt.Printf("❌ BIGQUERY TABLE DELETED: %s in namespace %s\n", resourceName, namespace)
+			
+			// Delete BigQuery table 
+			err := bigquery.DeleteTable(project, dataset, tableName)
+			if err != nil {
+				fmt.Printf("     - Error deleting the BigQuery table.\n")
+			} else {
+				fmt.Printf("     - Successfully deleted the BigQuery table.\n")
+			}
     	case watch.Modified:
         	fmt.Printf("🔄 BIGQUERY TABLE MODIFIED: %s in namespace %s)\n", resourceName, namespace)
     	}
