@@ -22,14 +22,10 @@ func CreateTable(projectID, datasetID, tableID string) error {
 		},
 	}
 
-	// This creates a BQ client that authenticates using credentials from our environemnt (ADC - applciation default credentials)
-	// Communicates directly with the google bq http api 
-	// so essentially setting up a golang phone which will later call the bq rest api  
-	client, err := bigquery.NewClient(ctx, projectID)
+	client, err := setupClient(ctx, projectID)
 	if err != nil {
 		return err
 	}
-
 	defer client.Close()
 
 	dataset := client.Dataset(datasetID)
@@ -47,7 +43,7 @@ func CreateTable(projectID, datasetID, tableID string) error {
 func DeleteTable(projectID, datasetID, tableID string) error {
 	ctx := context.Background()
 
-	client, err := bigquery.NewClient(ctx, projectID)
+	client, err := setupClient(ctx, projectID)
 	if err != nil {
 		return err
 	}
@@ -63,4 +59,15 @@ func DeleteTable(projectID, datasetID, tableID string) error {
 	}
 
 	return nil
+}
+
+func setupClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
+	// This creates a BQ client that authenticates using credentials from our environemnt (ADC - applciation default credentials)
+	// Communicates directly with the google bq http api 
+	// so essentially setting up a golang phone which will later call the bq rest api 
+	client, err := bigquery.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
