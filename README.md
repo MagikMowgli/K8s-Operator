@@ -5,7 +5,7 @@ A Kubernetes operator that manages BigQuery tables declaratively.
 ## What It Does
 
 - Watch for `BigQueryTable` custom resources in Kubernetes
-- Automatically creates tables in Google BigQuery
+- Automatically creates and deletes tables in Google BigQuery
 - Manages table lifecycle (create, delete)
 
 ## Prerequisites
@@ -35,6 +35,11 @@ go run cmd/controller/main.go
 ### 4. Create a BigQuery table
 ```bash
 kubectl apply -f k8s/example-database.yaml
+```
+
+### 5. Delete a BigQuery table
+```bash
+kubectl delete -f k8s/example-database.yaml
 ```
 
 ## Project Structure
@@ -71,7 +76,6 @@ spec:
 
 ## Future Improvements
 
-- [ ] Delete tables when BigQueryTable resource is deleted
 - [ ] Update table schema when resource is modified
 - [ ] Add status conditions to custom resource
 - [ ] Support more BigQuery table options
