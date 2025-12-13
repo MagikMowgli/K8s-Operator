@@ -2,8 +2,10 @@ package bigquery
 
 import (
 	"context"
+	"errors"
 
 	"cloud.google.com/go/bigquery"
+	"google.golang.org/api/googleapi"
 )
 
 
@@ -54,20 +56,31 @@ func DeleteTable(projectID, datasetID, tableID string) error {
 	table := dataset.Table(tableID)
 
 	err = table.Delete(ctx)
-	if err != nil {
-		return err
+	if err == nil {
+		// Table deleted successfully
+		return nil
 	}
 
-	return nil
+	if isNotFoundError(err) {
+		return nil
+	}
+	return err 
 }
 
+// This creates a BQ client that authenticates using credentials from our environemnt (ADC - applciation default credentials)
+// Communicates directly with the google bq http api 
+// so essentially setting up a golang phone which will later call the bq rest api 
 func setupClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
-	// This creates a BQ client that authenticates using credentials from our environemnt (ADC - applciation default credentials)
-	// Communicates directly with the google bq http api 
-	// so essentially setting up a golang phone which will later call the bq rest api 
 	client, err := bigquery.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
 	return client, nil
+}
+
+func isNotFoundError(err error) bool {
+	if gErr, ok := err.(*googleapi.Error); ok {
+		return gErr.Code == 404
+	}
+	return false		
 }
