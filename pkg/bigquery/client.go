@@ -79,8 +79,9 @@ func setupClient(ctx context.Context, projectID string) (*bigquery.Client, error
 }
 
 func isNotFoundError(err error) bool {
-	if gErr, ok := err.(*googleapi.Error); ok {
+	var gErr *googleapi.Error
+	if errors.As(err, &gErr) {
 		return gErr.Code == 404
 	}
-	return false		
+	return false
 }
