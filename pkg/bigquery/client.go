@@ -33,12 +33,11 @@ func CreateTable(projectID, datasetID, tableID string) error {
 	dataset := client.Dataset(datasetID)
 	table := dataset.Table(tableID)
 
-	// Creates a table using bigquery go sdkwhich wraps around the bq api
+	// Creates a table using bigquery go sdk which wraps around the bq api
 	err = table.Create(ctx, metadata)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -56,15 +55,10 @@ func DeleteTable(projectID, datasetID, tableID string) error {
 	table := dataset.Table(tableID)
 
 	err = table.Delete(ctx)
-	if err == nil {
-		// Table deleted successfully
-		return nil
+	if err != nil && isNotFoundError(err) {
+		return err
 	}
-
-	if isNotFoundError(err) {
-		return nil
-	}
-	return err 
+	return nil 
 }
 
 // This creates a BQ client that authenticates using credentials from our environemnt (ADC - applciation default credentials)

@@ -97,7 +97,7 @@ func main() {
 			// Delete BigQuery table 
 			err := bigquery.DeleteTable(project, dataset, tableName)
 			if err != nil {
-				fmt.Printf("     - Error deleting the BigQuery table.\n")
+				fmt.Printf("     - Error deleting the BigQuery table: %v\n", err)
 			} else {
 				fmt.Printf("     - Successfully deleted the BigQuery table.\n")
 			}
