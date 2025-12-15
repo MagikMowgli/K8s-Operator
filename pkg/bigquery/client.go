@@ -41,6 +41,7 @@ func CreateTable(projectID, datasetID, tableID string) error {
 	return nil
 }
 
+// Deletes a BigQuery table identified by projectID, datasetID, and tableID
 func DeleteTable(projectID, datasetID, tableID string) error {
 	ctx := context.Background()
 
@@ -72,6 +73,7 @@ func setupClient(ctx context.Context, projectID string) (*bigquery.Client, error
 	return client, nil
 }
 
+// Helper function to check if an error is a "not found" error from the Google API
 func isNotFoundError(err error) bool {
 	var gErr *googleapi.Error
 	if errors.As(err, &gErr) {
