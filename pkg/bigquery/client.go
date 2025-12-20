@@ -56,7 +56,7 @@ func DeleteTable(projectID, datasetID, tableID string) error {
 	table := dataset.Table(tableID)
 
 	err = table.Delete(ctx)
-	if err != nil && isNotFoundError(err) {
+	if err != nil && !isNotFoundError(err) {
 		return err
 	}
 	return nil 
