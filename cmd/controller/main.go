@@ -105,4 +105,12 @@ func main() {
         	fmt.Printf("🔄 BIGQUERY TABLE MODIFIED: %s in namespace %s)\n", resourceName, namespace)
     	}
 	}
+
+
+	func reconcile (event watch.watch.Event) {
+		// Placeholder for future reconciliation logic
+		return nil
+	}
+
+
 }
