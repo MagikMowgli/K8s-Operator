@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
-	// "os"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -14,8 +14,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	// "github.com/MagikMowgli/k8s-operator/pkg/bigquery"
-
+	"github.com/MagikMowgli/k8s-operator/pkg/bigquery"
 )
 
 
@@ -56,14 +55,48 @@ func main() {
 }
 }
 
+// Reconcile function to handle events from the watcher
 func reconcile(event watch.Event) error {
 	table, ok := event.Object.(*unstructured.Unstructured)
 	if !ok {
 		return fmt.Errorf("unexpected object type: %T", event.Object)
-}
+	}
+
 	resourceName := table.GetName()
 	namespace := table.GetNamespace()
 
 	fmt.Printf("Reconciling %s %s (event=%s)\n", namespace, resourceName, event.Type)
-	return nil
+
+	dbType, _, _ := unstructured.NestedString(table.Object, "spec", "type")
+    project, _, _ := unstructured.NestedString(table.Object, "spec", "project")
+    dataset, _, _ := unstructured.NestedString(table.Object, "spec", "dataset")
+    tableName, _, _ := unstructured.NestedString(table.Object, "spec", "tableName")
+
+	if tableName == "" {
+		tableName = resourceName
+    }
+
+    if project == "" {
+        project = os.Getenv("GCP_PROJECT_ID")
+        if project == "" {
+            return fmt.Errorf("GCP project not specified in spec and GCP_PROJECT_ID env var not set")
+        }
+    }
+
+	    switch event.Type {
+    case watch.Added:
+        fmt.Printf("Creating table %s.%s (type=%s)\n", dataset, tableName, dbType)
+        return bigquery.CreateTable(project, dataset, tableName)
+
+    case watch.Deleted:
+        fmt.Printf("Deleting table %s.%s\n", dataset, tableName)
+        return bigquery.DeleteTable(project, dataset, tableName)
+
+    case watch.Modified:
+        fmt.Printf("Modified event for %s/%s (not implemented yet)\n", namespace, resourceName)
+        return nil
+
+    default:
+        return nil
+    }
 }
