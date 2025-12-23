@@ -34,8 +34,7 @@ func CreateTable(projectID, datasetID, tableID string) error {
 	table := dataset.Table(tableID)
 
 	// Creates a table using bigquery go sdk which wraps around the bq api
-	err = table.Create(ctx, metadata)
-	if err != nil && !isAlreadyExistsError(err) {
+	if err = table.Create(ctx, metadata); err != nil && !isAlreadyExistsError(err) {
 		return err
 	}
 	return nil
@@ -55,8 +54,7 @@ func DeleteTable(projectID, datasetID, tableID string) error {
 	dataset := client.Dataset(datasetID)
 	table := dataset.Table(tableID)
 
-	err = table.Delete(ctx)
-	if err != nil && !isNotFoundError(err) {
+	if err = table.Delete(ctx); err != nil && !isNotFoundError(err) {
 		return err
 	}
 	return nil 
