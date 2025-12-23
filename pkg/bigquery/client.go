@@ -35,7 +35,7 @@ func CreateTable(projectID, datasetID, tableID string) error {
 
 	// Creates a table using bigquery go sdk which wraps around the bq api
 	err = table.Create(ctx, metadata)
-	if err != nil {
+	if err != nil && !isAlreadyExistsError(err) {
 		return err
 	}
 	return nil
@@ -78,6 +78,14 @@ func isNotFoundError(err error) bool {
 	var gErr *googleapi.Error
 	if errors.As(err, &gErr) {
 		return gErr.Code == 404
+	}
+	return false
+}
+
+func isAlreadyExistsError(err error) bool {
+	var gErr *googleapi.Error
+	if errors.As(err, &gErr) {
+		return gErr.Code == 409
 	}
 	return false
 }
