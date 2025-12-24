@@ -57,6 +57,11 @@ func main() {
 
 // Reconcile function to handle events from the watcher
 func reconcile(event watch.Event) error {
+	desiredExists := event.Type != watch.Deleted
+
+
+
+
 	table, ok := event.Object.(*unstructured.Unstructured)
 	if !ok {
 		return fmt.Errorf("unexpected object type: %T", event.Object)

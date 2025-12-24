@@ -80,10 +80,36 @@ func isNotFoundError(err error) bool {
 	return false
 }
 
+// Helper function to check if an error is an "already exists" error from the Google API
 func isAlreadyExistsError(err error) bool {
 	var gErr *googleapi.Error
 	if errors.As(err, &gErr) {
 		return gErr.Code == 409
 	}
 	return false
+}
+
+// Checks if table exists in BigQuery
+func TableExists(projectID, datasetID, tableID string) (bool, error) {
+	ctx := context.Background()
+	
+	client, err := setupClient(ctx, projectID)
+	if err != nil {
+		return false, err
+	}
+
+	defer client.Close()
+
+	dataset := client.Dataset(datasetID)
+	table := dataset.Table(tableID)
+
+	_, err = table.Metadata(ctx)
+	if err != nil {
+		if isNotFoundError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+
 }
