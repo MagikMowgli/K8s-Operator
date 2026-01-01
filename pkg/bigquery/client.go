@@ -87,7 +87,7 @@ func isAlreadyExistsError(err error) bool {
 		return gErr.Code == 409
 	}
 	return false
-}
+} 
 
 // Checks if table exists in BigQuery
 func TableExists(projectID, datasetID, tableID string) (bool, error) {

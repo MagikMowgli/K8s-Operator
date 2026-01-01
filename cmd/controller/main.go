@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/MagikMowgli/k8s-operator/pkg/bigquery"
+	"github.com/googleapis/gax-go/v2/apierror"
 )
 
 
@@ -49,25 +51,40 @@ func main() {
 	defer watcher.Stop()
 
 	for event := range watcher.ResultChan() {
-		if err := reconcile(event); err != nil {
+		if err := reconcile(context.Background(), dynClient, databaseGVR, event); err != nil {
 			fmt.Printf("Error reconciling event: %v\n", err)
 		}
 }
 }
 
 // Reconcile function to handle events from the watcher
-func reconcile(event watch.Event) error {
-	desiredExists := event.Type != watch.Deleted
+func reconcile(
+	ctx context.Context,
+	dynClient dynamic.Interface,
+	gvr schema.GroupVersionResource,
+	event watch.Event,
+) error {
 
-	table, ok := event.Object.(*unstructured.Unstructured)
+	obj, ok := event.Object.(*unstructured.Unstructured)
 	if !ok {
 		return fmt.Errorf("unexpected object type: %T", event.Object)
 	}
 
-	resourceName := table.GetName()
-	namespace := table.GetNamespace()
+	name := obj.GetName()
+	namespace := obj.GetNamespace()
 
-	fmt.Printf("Reconciling %s %s (event=%s)\n", namespace, resourceName, event.Type)
+	fmt.Printf("Reconciling %s %s (event=%s)\n", namespace, name, event.Type)
+
+	current, err := dynClient.Resource(gvr).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		if apierror.IsNotFound(err) {
+			fmt.Printf("Desired state: CR is gone -> ensure BigQuery table is deleted\n")
+			return nil
+		} 
+		return err
+	}
+
+
 
     project, _, _ := unstructured.NestedString(table.Object, "spec", "project")
     dataset, _, _ := unstructured.NestedString(table.Object, "spec", "dataset")
