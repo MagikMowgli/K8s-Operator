@@ -2,6 +2,8 @@ apiVersion: mahdi.dev/v1
 kind: BigQueryTable
 metadata:
   name: users-table
+  finalizers:
+    - bigquerytables.mahdi.dev/finalizer
 spec:
   type: bigquery
   dataset: test_dataset

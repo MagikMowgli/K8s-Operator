@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,10 +13,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/MagikMowgli/k8s-operator/pkg/bigquery"
-	"github.com/googleapis/gax-go/v2/apierror"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
+const finalizerName = "bigquerytables.mahdi.dev/finalizer"
 
 func main() {
 	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
@@ -77,44 +75,23 @@ func reconcile(
 
 	current, err := dynClient.Resource(gvr).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
-		if apierror.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			fmt.Printf("Desired state: CR is gone -> ensure BigQuery table is deleted\n")
 			return nil
 		} 
 		return err
 	}
 
-
-
-    project, _, _ := unstructured.NestedString(table.Object, "spec", "project")
-    dataset, _, _ := unstructured.NestedString(table.Object, "spec", "dataset")
-    tableName, _, _ := unstructured.NestedString(table.Object, "spec", "tableName")
-
-	if tableName == "" {
-		tableName = resourceName
-    }
-
-    if project == "" {
-        project = os.Getenv("GCP_PROJECT_ID")
-        if project == "" {
-            return fmt.Errorf("GCP project not specified in spec and GCP_PROJECT_ID env var not set")
-        }
-    }
-
-	actualExists, err := bigquery.TableExists(project, dataset, tableName)
-	if err != nil {
-		return err
-	}
-
-	if desiredExists == actualExists {
-		fmt.Printf("In sync. desired=%v actual=%v\n", desiredExists, actualExists)
-		return nil
-	}
-
-	if desiredExists {
-		fmt.Printf("Out of sync -> creating table\n")
-		return bigquery.CreateTable(project, dataset, tableName)
-	}
-	fmt.Printf("Out of sync -> deleting table\n")
-	return bigquery.DeleteTable(project, dataset, tableName)
+	deleting := current.GetDeletionTimestamp() != nil
+	fmt.Printf("deleting=%v\n", deleting)
+	return nil
 }
+
+
+func hasfinalizer(obj *unstructured.Unstructured, finalizer string) bool {
+	for _, exisiting := range obJ.GetFinalizers() {
+		if exisiting == finalizer {
+			return true
+		}
+	}
+	return f
