@@ -88,11 +88,16 @@ func reconcile(
 }
 
 
-func hasfinalizer(obj *unstructured.Unstructured, finalizerName string) bool {
+func hasfinalizer(obj *unstructured.Unstructured, finalizer string) bool {
 	for _, exisiting := range obj.GetFinalizers() {
-		if exisiting == finalizerName {
+		if exisiting == finalizer {
 			return true
 		}
 	}
 	return false
 }
+
+func addfinalizer(obj *unstructured.Unstructured, finalizer string) {
+	obj.SetFinalizers(append(obj.GetFinalizers(), finalizer))
+}
+
